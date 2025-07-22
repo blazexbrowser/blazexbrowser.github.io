@@ -1,1 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blazex</title>
+    <style>
+    body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2c0900 0%, #7c1c00 20%, #ff3c00 45%, #ffb300 70%, #fff275 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo {
+            margin-top: 40px;
+            width: 120px;
+            height: auto;
+        }
+        .search-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .search-bar {
+            width: 100%;
+            display: flex;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 18px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px 0 0 8px;
+            outline: none;
+            background: rgba(255, 236, 179, 0.95);
+            box-shadow: 0 0 8px 2px #ffb30099, 0 2px 8px rgba(0,0,0,0.08);
+            color: #7c1c00;
+            transition: box-shadow 0.2s;
+        }
+        input[type="text"]:focus {
+            box-shadow: 0 0 16px 4px #ff3c00cc, 0 2px 8px rgba(0,0,0,0.12);
+            background: #fffbe6;
+        }
+        select {
+            padding: 14px 12px;
+            font-size: 18px;
+            border: none;
+            background: #fffbe6;
+            color: #7c1c00;
+            border-radius: 0;
+            outline: none;
+        }
+        button {
+            padding: 14px 28px;
+            font-size: 20px;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            background: linear-gradient(90deg, #ff3c00 0%, #ffb300 100%);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 8px 2px #ff3c0099, 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        button:hover, button:focus {
+            background: linear-gradient(90deg, #ffb300 0%, #ff3c00 100%);
+            box-shadow: 0 0 16px 4px #ff3c00cc, 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .results {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 700px;
+        }
+        .result-item {
+            background: rgba(255,236,179,0.97);
+            margin-bottom: 22px;
+            padding: 22px 26px 22px 18px;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px 0 #ffb30055, 0 2px 8px rgba(44,9,0,0.08);
+            border-left: 8px solid #ff3c00;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            transition: box-shadow 0.2s;
+        }
+        .result-item:hover {
+            box-shadow: 0 8px 32px 0 #ff3c00aa, 0 2px 8px rgba(44,9,0,0.12);
+            border-left: 8px solid #ffb300;
+        }
+        .result-item img {
+            max-width: 140px;
+            max-height: 110px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px #ffb30055;
+        }
+        .result-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .result-title {
+            font-size: 22px;
+            color: #ff3c00;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 6px;
+            transition: color 0.2s;
+        }
+        .result-title:hover {
+            color: #b71c1c;
+            text-decoration: underline;
+        }
+        .result-snippet {
+            color: #7c1c00;
+            margin-top: 4px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        @keyframes blaze-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <img src="logo.png" alt="Blazex Logo" class="logo">
+    <div class="search-container">
+        <form id="searchForm" autocomplete="off">
+            <div class="search-bar">
+                <input type="text" id="query" placeholder="Search Blazex...">
+                <select id="searchType">
+                    <option value="web">Web</option>
+                    <option value="image">Images</option>
+                </select>
+                <button type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+    <div class="results" id="results"></div>
+    <script>
+        const API_KEYS = {
+            web: {
+                key: 'AIzaSyDte-g--dC7hVJFbrnHjpQ9QOr9x7CAUto',
+                cx: '5247c2037c8d44105'
+            },
+            image: {
+                key: 'AIzaSyDF5dcAvVfLk5AFIa5SEQCxV9DxgrpSO_A',
+                cx: '9081a3a1704304584'
+            }
+        };
 
+        document.getElementById('searchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const query = document.getElementById('query').value.trim();
+            const type = document.getElementById('searchType').value;
+            if (!query) return;
+            showLoading();
+            const { key, cx } = API_KEYS[type];
+            let url = `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cx}&q=${encodeURIComponent(query)}`;
+            if (type === 'image') url += '&searchType=image';
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                showResults(data, type);
+            } catch (err) {
+                showError('Failed to fetch results.');
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('results').innerHTML = `
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 32px 0;
+                ">
+                    <span style="font-size: 48px; animation: blaze-spin 1.2s linear infinite; display: inline-block;">🔥</span>
+                    <span style="
+                        font-size: 22px;
+                        font-weight: bold;
+                        color: #fff;
+                        background: linear-gradient(90deg, #ff3c00 0%, #ffb300 100%);
+                        border-radius: 8px;
+                        padding: 8px 24px;
+                        box-shadow: 0 2px 8px #ffb30099;
+                        margin-top: 12px;
+                        text-shadow: 0 2px 8px #7c1c00cc;
+                    ">Searching...</span>
+                </div>
+            `;
+        }
+
+        function showError(msg) {
+            document.getElementById('results').innerHTML = `
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 32px 0;
+                ">
+                    <span style="font-size: 48px;"></span>
+                    <span style="
+                        font-size: 24px;
+                        font-weight: bold;
+                        color: #fff;
+                        background: linear-gradient(90deg, #ff3c00 0%, #ffb300 100%);
+                        border-radius: 8px;
+                        padding: 8px 24px;
+                        box-shadow: 0 2px 8px #ffb30099;
+                        margin-top: 12px;
+                        text-shadow: 0 2px 8px #7c1c00cc;
+                    ">${msg}</span>
+                </div>
+            `;
+        }
+
+        function showResults(data, type) {
+            if (!data.items || data.items.length === 0) {
+                showError('No results found.');
+                return;
+            }
+            let html = '';
+            if (type === 'web') {
+                data.items.forEach(item => {
+                    html += `<div class="result-item">
+                        <div class="result-content">
+                            <a href="${item.link}" class="result-title" target="_blank">${item.title}</a>
+                            <div class="result-snippet">${item.snippet}</div>
+                        </div>
+                    </div>`;
+                });
+            } else if (type === 'image') {
+                data.items.forEach(item => {
+                    html += `<div class="result-item">
+                        <a href="${item.link}" target="_blank">
+                            <img src="${item.link}" alt="${item.title}">
+                        </a>
+                        <div class="result-content">
+                            <a href="${item.link}" class="result-title" target="_blank">${item.title}</a>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('results').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
