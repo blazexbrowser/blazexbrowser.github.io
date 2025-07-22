@@ -146,6 +146,12 @@
     </div>
     <div class="results" id="results"></div>
     <script>
+        // Helper to get URL query parameter
+        function getQueryParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+
         const API_KEYS = {
             web: {
                 key: 'AIzaSyDte-g--dC7hVJFbrnHjpQ9QOr9x7CAUto',
@@ -157,10 +163,7 @@
             }
         };
 
-        document.getElementById('searchForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const query = document.getElementById('query').value.trim();
-            const type = document.getElementById('searchType').value;
+        async function runSearch(query, type) {
             if (!query) return;
             showLoading();
             const { key, cx } = API_KEYS[type];
@@ -172,6 +175,22 @@
                 showResults(data, type);
             } catch (err) {
                 showError('Failed to fetch results.');
+            }
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = document.getElementById('query').value.trim();
+            const type = document.getElementById('searchType').value;
+            runSearch(query, type);
+        });
+
+        // Auto-search if ?q= is present
+        window.addEventListener('DOMContentLoaded', function() {
+            const q = getQueryParam('q');
+            if (q) {
+                document.getElementById('query').value = q;
+                runSearch(q, document.getElementById('searchType').value);
             }
         });
 
