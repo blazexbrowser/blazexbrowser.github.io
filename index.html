@@ -220,7 +220,34 @@
             `;
         }
 
-        function showError(msg) {
+        function showError(msg, query) {
+            // Easter egg for 'schlingus browser'
+            if (query && query.trim().toLowerCase() === 'schlingus browser') {
+                document.getElementById('results').innerHTML = `
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 32px 0;
+                    ">
+                        <span style="font-size: 48px;">🪦</span>
+                        <span style="
+                            font-size: 28px;
+                            font-weight: bold;
+                            color: #fff;
+                            background: linear-gradient(90deg, #7c1c00 0%, #ff3c00 100%);
+                            border-radius: 8px;
+                            padding: 12px 32px;
+                            box-shadow: 0 2px 8px #ff3c00cc;
+                            margin-top: 12px;
+                            text-shadow: 0 2px 8px #7c1c00cc;
+                        ">rip schlingus browser</span>
+                    </div>
+                `;
+                startSchlingusBounce();
+                return;
+            }
             document.getElementById('results').innerHTML = `
                 <div style="
                     display: flex;
@@ -246,8 +273,13 @@
         }
 
         function showResults(data, type) {
+            const query = document.getElementById('query').value;
+            if (query.trim().toLowerCase() === 'schlingus browser') {
+                showError('No results found.', query);
+                return;
+            }
             if (!data.items || data.items.length === 0) {
-                showError('No results found.');
+                showError('No results found.', query);
                 return;
             }
             let html = '';
@@ -273,6 +305,38 @@
                 });
             }
             document.getElementById('results').innerHTML = html;
+        }
+        // Schlingus Easter Egg Animation
+        let schlingusActive = false;
+        function startSchlingusBounce() {
+            if (schlingusActive) return;
+            schlingusActive = true;
+            const img = document.createElement('img');
+            img.src = 'schlingus.png';
+            img.alt = 'Schlingus Browser';
+            img.style.position = 'fixed';
+            img.style.zIndex = '9999';
+            img.style.width = '120px';
+            img.style.height = '120px';
+            img.style.pointerEvents = 'none';
+            img.style.left = '50px';
+            img.style.top = '50px';
+            document.body.appendChild(img);
+
+            let x = 50, y = 50;
+            let dx = 5 + Math.random() * 3, dy = 5 + Math.random() * 3;
+            const update = () => {
+                const w = window.innerWidth - img.width;
+                const h = window.innerHeight - img.height;
+                x += dx;
+                y += dy;
+                if (x <= 0 || x >= w) dx = -dx;
+                if (y <= 0 || y >= h) dy = -dy;
+                img.style.left = x + 'px';
+                img.style.top = y + 'px';
+                requestAnimationFrame(update);
+            };
+            update();
         }
     </script>
 </body>
